@@ -1,5 +1,4 @@
 // Copyright (c) 2024 Magic Tech Ltd
-
 package fit.magic.cv.repcounter
 
 import fit.magic.cv.PoseLandmarkerHelper
@@ -25,10 +24,10 @@ class ExerciseRepCounterImpl : ExerciseRepCounter() {
 
     // Constants for progress calculation
     private object LungeThresholds {
-        const val MAX_ANGLE = 90f // Deepest lunge position
-        const val MIN_ANGLE = 170f // Standing position
-        const val ENTER_LUNGE = 0.8f // Progress threshold to enter lunge
-        const val EXIT_LUNGE = 0.2f // Progress threshold to exit lunge
+        const val MAX_ANGLE = 110f // Adjusted: A less steep lunge angle
+        const val MIN_ANGLE = 160f // Adjusted: Standing angle
+        const val ENTER_LUNGE = 0.7f // Enter threshold for lunge
+        const val EXIT_LUNGE = 0.3f // Exit threshold for lunge
     }
 
     override fun setResults(resultBundle: PoseLandmarkerHelper.ResultBundle) {
@@ -53,9 +52,15 @@ class ExerciseRepCounterImpl : ExerciseRepCounter() {
         val leftAngle = calculateAngle(leftLeg.first, leftLeg.second, leftLeg.third)
         val rightAngle = calculateAngle(rightLeg.first, rightLeg.second, rightLeg.third)
 
+        // Log calculated angles for debugging
+        logDebug("Left knee angle: $leftAngle, Right knee angle: $rightAngle")
+
         // Calculate progress
         val currentProgress = calculateProgress(leftAngle, rightAngle)
         sendProgressUpdate(currentProgress)
+
+        // Log calculated progress for debugging
+        logDebug("Current progress: $currentProgress")
 
         // Check for lunge completion
         handleLungeProgress(currentProgress)
@@ -103,10 +108,16 @@ class ExerciseRepCounterImpl : ExerciseRepCounter() {
     private fun handleLungeProgress(currentProgress: Float) {
         if (currentProgress > LungeThresholds.ENTER_LUNGE && !isInLunge) {
             isInLunge = true
+            logDebug("Entering lunge position.")
         } else if (currentProgress < LungeThresholds.EXIT_LUNGE && isInLunge) {
             isInLunge = false
             incrementRepCount()
             sendFeedbackMessage("Rep completed!")
+            logDebug("Exiting lunge position. Rep counted.")
         }
+    }
+
+    private fun logDebug(message: String) {
+        println("DEBUG: $message") // Use proper logging in production
     }
 }
